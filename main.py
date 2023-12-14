@@ -2,6 +2,7 @@ import pandas as pd
 import utils.scraper 
 import utils.parser
 import utils.inputgenerator
+import utils.matching
 
 import pandas as pd
 import bnlearn as bn
@@ -24,51 +25,28 @@ input_filename_ = 'files/cleaned_output.csv'  # Replace with your input CSV file
 output_filename_ = 'files/final_output.csv'  # Replace with desired output CSV filename
 #utils.inputgenerator.filter_csv(input_filename_, output_filename_)
 
-####  CHAT WITH LOV
+
 file_path = "files/final_output.csv"
 vocabs = pd.read_csv(file_path)
-filtered_vocabs = vocabs[(vocabs['Predicate'] == 'domain') & (vocabs['Object'] == 'Person')]
-#filtered_df = df[((df['predicate'] == 'domain') | (df['predicate'] == 'range')) & (df['object'] == 'Person')]
-#print(filtered_vocabs)
-filtered_vocabs_sop = filtered_vocabs[['Subject', 'Predicate', 'Object']]
-#print(filtered_vocabs_sop)
-# edges = [('Object', 'Subject'), ('Predicate', 'Subject')]
-edges = [('Object', 'Subject')] #0.7 :: Person :- Name 
-DAG = bn.make_DAG(edges)
-model = bn.parameter_learning.fit(DAG, filtered_vocabs_sop, methodtype="bayes")
-bn.plot(model, title='LOV')
-#CPDs = bn.print_CPD(DAG)
-q1 = bn.inference.fit(model, variables=['Subject'], evidence={'Object': 'Person'}) #evidence={'Predicate':'domain', 'Object': 'Address'})
-print(q1)
+domain = vocabs[(vocabs['Predicate'] == 'domain')] #& (vocabs['Object'] == 'Person')]
+domain_cleaned = utils.inputgenerator.clean_subject_labels(domain)
+domain_parents = utils.inputgenerator.transform_subject_to_hypernym(domain_cleaned)
+properties_dataframe = utils.inputgenerator.generate_subject_synonyms(domain_parents) #properties
+classes_dataframe = utils.inputgenerator.group_records_by_domain(properties_dataframe)
 
-#check top-level ontology for ontology alignment
+# output_f = 'output_f.csv'
+# classes_dataframe.to_csv(output_f, index=False)
 
-#example query 1
-#given multiple properties, probabilities of associated classes
+class_corpus = utils.inputgenerator.generate_corpus_list_c(classes_dataframe)
+#class_queries = ['firs-name, address, email, affiliation, birthDate, alumniOf']
+#class_queries = ['project, plan, publications, interest, workplace homepage, work info home page, school page, past project']
+class_queries = ['firstname']
+t_k = 10
+sbert_model = 'all-MiniLM-L6-v2'
 
-# # USE CASE 1 #https://erdogant.github.io/bnlearn/pages/html/UseCases.html
-# # Load dataframe
-# df = bn.import_example()
-# # Import DAG
-# DAG = bn.import_DAG('sprinkler', CPD=False)
-# # Learn parameters
-# model = bn.parameter_learning.fit(DAG, df)
-# # adjacency matrix:
-# model['adjmat']
-# edges = [('Cloudy', 'Sprinkler'),
-#          ('Cloudy', 'Rain'),
-#          ('Sprinkler', 'Wet_Grass'),
-#          ('Rain', 'Wet_Grass')]
-# df = bn.import_example('sprinkler')
-# import bnlearn as bn
-# DAG = bn.make_DAG(edges)
-# # [BNLEARN] Bayesian DAG created.
-# # Print the CPDs
-# CPDs = bn.print_CPD(DAG)
-# # [BNLEARN.print_CPD] No CPDs to print. Use bnlearn.plot(DAG) to make a plot.
-# #bn.plot(DAG)
-# DAG = bn.parameter_learning.fit(DAG, df, methodtype='bayes')
-# CPDs = bn.print_CPD(DAG)
-# q1 = bn.inference.fit(DAG, variables=['Wet_Grass'], evidence={'Rain':1, 'Sprinkler':0, 'Cloudy':1})
-# #print(q1.df)
+etr_output = utils.matching.etr(class_queries, class_corpus, t_k, sbert_model)
+
+# item_to_find = 'sibling, other sector, parent, long biography, or nephew, merge company, based near, numeric datum, interests, child, death, main sector, date, event participant, residence, gender, depiction, or uncle, person participant, map, other sector, short biography, patrimony, last name, start date, logo, student, academic organization, buyer company, relationship, organization participant, document url, work role, academic participant, philantropy sector, organization participant, place, comment, main sector, spouse, ticker symbol, target company, participant, last name, political participant, documentation, source, formation year, company, philantropy sector, birth, first name, relevant date, url, grand child, tax id, cousin, grandparent, alias, connected via, representatives, legal constitution, value, end date, social reason'
+found_record = utils.matching.get_record_from_item(etr_output, classes_dataframe, 'output0.csv', 'output1.csv')
+#print(found_record)
 

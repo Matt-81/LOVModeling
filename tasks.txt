@@ -1,0 +1,6 @@
+Possible tasks to be addressed.
+1. given a set of properties (expressed via NL), return a ranking of vocabulary classes (with vocabulary name, URI, vocab release and release data, etc) in LOV 
+2. given a domain and range (expressed via NL), return a ranking of vocabulary properties (with vocabulary name, URI, vocab release and release data, etc) in LOV 
+3. given a "verbalized" graph structure, return a ranking of vocabularies (with vocabulary name, URI, vocab release and release data, etc) in LOV
+4. given a class or property NL description, return a ranking of classes/properties (with vocabulary name, URI, vocab release and release data, etc) in LOV 
+5. ...
