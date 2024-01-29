@@ -6,7 +6,6 @@ import pandas as pd
 import pickle
 
 file_path = "files/final_output.csv"
-
 predicate_values_to_keep = ['subClassOf']#, 'isDefinedBy']
 #predicate_values_to_keep = [query.strip() for query in predicate_values_to_keep_input.split(',')]
 domain_values_to_keep = ['vivo', 'schema']#, 'vivo']#, 'isDefinedBy']
