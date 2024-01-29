@@ -1,13 +1,29 @@
 from sentence_transformers import SentenceTransformer, util
 import pandas as pd
 import torch
+import pickle
 
-def etr(class_queries, class_corpus, t_k, sbert_model):
+def generate_and_save_embeddings(sentences, model_path, embeddings_file):
+    # Load pre-trained Sentence BERT model
+    model = SentenceTransformer(model_path)
+
+    # Generate embeddings for sentences
+    embeddings = model.encode(sentences, convert_to_tensor=True)
+
+    # Save embeddings to a file
+    with open(embeddings_file, 'wb') as f:
+        pickle.dump(embeddings, f)
+
+    print("Embeddings saved successfully.")
+
+#https://stackoverflow.com/questions/68334844/how-to-save-sentence-bert-output-vectors-to-a-file
+
+def etr0(class_queries, class_corpus, t_k, sbert_model, class_embeddings):
     for query in class_queries:
         top_k = min(t_k, len(class_corpus))
         embedder = SentenceTransformer(sbert_model)
         query_embedding = embedder.encode(query, convert_to_tensor=True)
-        class_embeddings = embedder.encode(class_corpus, convert_to_tensor=True)
+        # class_embeddings = embedder.encode(class_corpus, convert_to_tensor=True)
         # We use cosine-similarity and torch.topk to find the highest 5 scores
         cos_scores = util.cos_sim(query_embedding, class_embeddings)[0]
         top_results = torch.topk(cos_scores, k=top_k)
@@ -22,6 +38,7 @@ def etr(class_queries, class_corpus, t_k, sbert_model):
             #print("\n\n======================\n\n")
             output.append([class_corpus[idx], "(Score: {:.4f})".format(score)])
         return output
+
 
 #https://www.appsloveworld.com/pandas/100/13/how-do-i-remove-name-and-dtype-from-pandas-output
 
